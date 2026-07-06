@@ -7,14 +7,15 @@ import * as path from 'path';
 export class ExcelExporter {
   static exportData(data: UnifiedFundingRound[], filename: string = 'Startup_Funding_Data.xlsx') {
     if (data.length === 0) {
-      console.log('⚠️ No data to export.');
+      console.log(' No data to export.');
       return;
     }
+    let flaternData=data.map((item)=> ({
+        ...item,
+        investors:item.investors.join(", ")
+    }))
+    const worksheet = xlsx.utils.json_to_sheet(flaternData);
 
-    // 1. Convert our clean JSON array into a worksheet
-    const worksheet = xlsx.utils.json_to_sheet(data);
-
-    // 2. Auto-size the columns so it looks professional immediately
     const colWidths = [
       { wch: 15 }, // Source
       { wch: 30 }, // Startup Name

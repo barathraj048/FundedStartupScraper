@@ -16,14 +16,13 @@ export class Inc42Adapter implements ScraperAdapter {
   async fetchLatest(): Promise<UnifiedFundingRound[]> {
     let allCompanies: UnifiedFundingRound[] = [];
     let currentOffset = 0;
-    const limitPerPage = 50; // Ask for a larger batch per request
-    let keepScraping = true;
+    const limitPerPage = 50; 
 
     console.log('Starting Inc42 Pagination Loop...');
 
-    while (keepScraping) {
+    while (currentOffset<100) {
       try {
-        console.log(` Fetching offset: ${currentOffset}`);
+        console.log(` Fetching offset: ${currentOffset}, allCOmpanies ${allCompanies.length}`);
         
         const response = await this.impit.fetch(this.apiUrl, {
           method: 'POST',
@@ -53,7 +52,6 @@ export class Inc42Adapter implements ScraperAdapter {
         
         if (rawCompanies.length === 0) {
           console.log('Reached the end of the data stream.');
-          keepScraping = false; // Stop the loop if no data returns
           break;
         }
 
@@ -76,7 +74,6 @@ export class Inc42Adapter implements ScraperAdapter {
 
       } catch (error: any) {
         console.error(' [Inc42 Adapter Error]:', error.message);
-        keepScraping = false; // Failsafe
       }
     }
 
