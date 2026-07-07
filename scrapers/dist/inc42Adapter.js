@@ -13,8 +13,9 @@ export class Inc42Adapter {
         let allCompanies = [];
         let currentOffset = 0;
         const limitPerPage = 50;
+        let canContinueLoop = true;
         console.log('Starting Inc42 Pagination Loop...');
-        while (currentOffset < 100) {
+        while (canContinueLoop) {
             try {
                 console.log(` Fetching offset: ${currentOffset}, allCOmpanies ${allCompanies.length}`);
                 const response = await this.impit.fetch(this.apiUrl, {
@@ -36,12 +37,14 @@ export class Inc42Adapter {
                 });
                 if (!response.ok) {
                     console.error(`Request failed with status ${response.status}. Halting loop.`);
+                    canContinueLoop = false;
                     break;
                 }
                 const payload = await response.json();
                 const rawCompanies = payload?.response?.companies || [];
                 if (rawCompanies.length === 0) {
                     console.log('Reached the end of the data stream.');
+                    canContinueLoop = false;
                     break;
                 }
                 // Map the raw data to our clean schema

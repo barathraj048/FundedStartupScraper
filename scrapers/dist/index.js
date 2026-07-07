@@ -1,8 +1,15 @@
 import { Inc42Adapter } from "./inc42Adapter.js";
 import { ExcelExporter } from "./exporter.js";
+import { starrtupTalkAdepter } from "./starrtupTalkAdapter.js";
 const main = async () => {
-    const adapter = new Inc42Adapter;
-    const data = await adapter.fetchLatest();
+    const inc42Adapter = new Inc42Adapter;
+    const starrtupTalk = new starrtupTalkAdepter;
+    const [dataFromInc42, dataFromStartupTalk] = await Promise.all([
+        inc42Adapter.fetchLatest(), starrtupTalk.fetchLatest()
+    ]);
+    const data = [
+        ...dataFromInc42, ...dataFromStartupTalk
+    ];
     console.log(`\n Execution Complete! Extracted ${data.length} startups.`);
     if (data.length > 0) {
         ExcelExporter.exportData(data);

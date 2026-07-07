@@ -3,7 +3,7 @@ import * as xlsx from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
 export class ExcelExporter {
-    static exportData(data, filename = 'Startup_Funding_Data.xlsx') {
+    static exportData(data, filename = 'Startup_Funding_Data03.xlsx') {
         if (data.length === 0) {
             console.log(' No data to export.');
             return;

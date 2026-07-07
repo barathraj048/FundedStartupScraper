@@ -1,15 +1,16 @@
 import { Inc42Adapter } from "./inc42Adapter.js";
 import { ExcelExporter } from "./exporter.js";
-import { TartupTalkyAdepter } from "./tartupTalkyAdapter.js";
+import { starrtupTalkAdepter } from "./starrtupTalkAdapter.js";
 import type { UnifiedFundingRound } from "./types/types.js";
 const main=async()=> {
    const inc42Adapter=new Inc42Adapter
-   const starrtupTalk=new TartupTalkyAdepter
-   const data=[]
-   const dataFromInc42=await inc42Adapter.fetchLatest()
-   data.push(...dataFromInc42)
-   const dataFromStartupTalk=await starrtupTalk.fetchLatest()
-   data.push(...dataFromStartupTalk)
+   const starrtupTalk=new starrtupTalkAdepter
+   const [dataFromInc42,dataFromStartupTalk]=await Promise.all([
+      inc42Adapter.fetchLatest(),starrtupTalk.fetchLatest()
+   ])
+   const data:UnifiedFundingRound[]=[
+    ...dataFromInc42,...dataFromStartupTalk
+   ]
    console.log(`\n Execution Complete! Extracted ${data.length} startups.`);
   
   if (data.length > 0) {

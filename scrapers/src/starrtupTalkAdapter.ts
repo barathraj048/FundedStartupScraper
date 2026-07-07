@@ -3,7 +3,7 @@ import type { ScraperAdapter, UnifiedFundingRound } from "./types/types.js";
 import * as cheerio from 'cheerio';
 
 
-export class TartupTalkyAdepter implements ScraperAdapter{
+export class starrtupTalkAdepter implements ScraperAdapter{
    private Url:string="https://startuptalky.com/indian-startups-funding-investors-data-2026/"
    private impit:Impit
    constructor(){
@@ -33,6 +33,21 @@ export class TartupTalkyAdepter implements ScraperAdapter{
    }
    }
 
+   amountConverter(amount: string): number {
+      const value = parseFloat(amount.replace(/[^0-9.]/g, ""));
+
+      if (isNaN(value)) return 0;
+
+      const suffix = amount.trim().slice(-1).toUpperCase();
+
+      const amountMap: Record<string, number> = {
+         K: 1_000,
+         M: 1_000_000,
+         B: 1_000_000_000
+      };
+
+      return value * (amountMap[suffix] ?? 1);
+   }
    extractData(html: string): UnifiedFundingRound[] {
    const $ = cheerio.load(html);
    const rounds: UnifiedFundingRound[] = [];
@@ -42,14 +57,16 @@ export class TartupTalkyAdepter implements ScraperAdapter{
 
       const columns = $(element).find('td');
 
-      const rawDate = $(columns[0]).text().trim();
-      const startupName = $(columns[1]).text().trim();
-      const rawAmount = $(columns[4]).text().trim();
-      const rawInvestors = $(columns[5]).text().trim();
-      const fundingStage = $(columns[6]).text().trim();
+      const startupName = $(columns[0]).text().trim();
+      const sector = $(columns[1]).text().trim();     
+      const headquarters = $(columns[2]).text().trim();
 
-      const amountUSD = parseInt(rawAmount.replace(/[^0-9]/g, '')) || 0; 
-      const investors = rawInvestors ? rawInvestors.split(',').map(i => i.trim()) : [];
+      const rawAmount = $(columns[3]).text().trim();
+      const fundingStage = $(columns[4]).text().trim();
+      const rawInvestors = $(columns[5]).text().trim();
+
+      const amountUSD = this.amountConverter(rawAmount);
+      const investors= rawInvestors ? rawInvestors.split(',').map(i => i.trim()) : []
 
       // 5. If a row actually has a startup name, push it to our array
       if (startupName) {
@@ -58,7 +75,7 @@ export class TartupTalkyAdepter implements ScraperAdapter{
          startupName,
          amountUSD,
          fundingStage: fundingStage || 'Undisclosed',
-         fundingDate: rawDate || "",
+         fundingDate: "",
          investors,
          website:"" 
          });
@@ -68,6 +85,3 @@ export class TartupTalkyAdepter implements ScraperAdapter{
    return rounds;
    }
 }
-
-let test=new TartupTalkyAdepter
-test.fetchLatest()
