@@ -10,4 +10,7 @@ export interface UnifiedFundingRound {
 export interface ScraperAdapter {
     fetchLatest(): Promise<UnifiedFundingRound[]>;
 }
+export interface ReachoutAdapter {
+    sendPitch(targetMail: string, targetCompany: string, founder?: string): Promise<boolean>;
+}
 //# sourceMappingURL=types.d.ts.map

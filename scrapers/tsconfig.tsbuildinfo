@@ -1,1 +1,1 @@
-{"root":["./src/exporter.ts","./src/inc42adapter.ts","./src/index.ts","./src/starrtuptalkadapter.ts","./src/types/types.ts"],"version":"6.0.3"}
+{"root":["./src/exporter.ts","./src/index.ts","./src/adaptors/inc42adapter.ts","./src/adaptors/starrtuptalkadapter.ts","./src/maildispatcher/mailer.ts","./src/types/types.ts"],"version":"6.0.3"}

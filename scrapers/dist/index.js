@@ -1,6 +1,6 @@
-import { Inc42Adapter } from "./inc42Adapter.js";
+import { Inc42Adapter } from "./adaptors/inc42Adapter.js";
 import { ExcelExporter } from "./exporter.js";
-import { starrtupTalkAdepter } from "./starrtupTalkAdapter.js";
+import { starrtupTalkAdepter } from "./adaptors/starrtupTalkAdapter.js";
 const main = async () => {
     const inc42Adapter = new Inc42Adapter;
     const starrtupTalk = new starrtupTalkAdepter;

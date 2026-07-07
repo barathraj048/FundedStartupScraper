@@ -1,5 +1,5 @@
 import { Impit } from "impit";
-import type { ScraperAdapter, UnifiedFundingRound } from "./types/types.js";
+import type { ScraperAdapter, UnifiedFundingRound } from "../types/types.js";
 import * as cheerio from 'cheerio';
 
 

@@ -1,5 +1,5 @@
 import { Impit } from 'impit';
-import type { UnifiedFundingRound, ScraperAdapter } from './types/types.js';
+import type { UnifiedFundingRound, ScraperAdapter } from '../types/types.js';
 
 export class Inc42Adapter implements ScraperAdapter {
   private apiUrl = 'https://datalabs-api.inc42.com/company/new-search';
