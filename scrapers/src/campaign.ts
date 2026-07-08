@@ -2,50 +2,121 @@ import * as xlsx from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
 import { MailOutReacher } from './mailDispatcher/mailer.js';
-import { resolve } from 'dns';
 
-const FileName:string="Startup_Funding_Data03"
-const BatchSize:number=35
-const MinDelaIn_Ms=2 * 60 * 1000
-const MaxDelayIn_MS=20 * 60 * 1000
-const SessionTiming=12 * 60 * 60 * 1000
+const FileName: string = "Startup_Funding_Data03.xlsx"; 
+const BatchSize: number = 35;
+const MinDelaIn_Ms = 2 * 60 * 1000;
+const MaxDelayIn_MS = 20 * 60 * 1000;
+const SessionTiming = 12 * 60 * 60 * 1000;
 
-export class CampaignManager{
-   private maoler=new MailOutReacher()
-   private filePath=path.resolve(process.cwd(),"output",FileName)
+export class CampaignManager {
+   // 2. Fixed typo from 'maoler' to 'mailer'
+   private mailer = new MailOutReacher(); 
+   private filePath = path.resolve(process.cwd(), "output", FileName);
 
-   private getRandomDelay(){
-      return Math.floor(Math.random()*(MaxDelayIn_MS-MinDelaIn_Ms+1) + MinDelaIn_Ms)
+   private getRandomDelay() {
+      return Math.floor(Math.random() * (MaxDelayIn_MS - MinDelaIn_Ms + 1) + MinDelaIn_Ms);
    }
 
-   private sleep(ms:number){
-      const min=Math.floor((ms/60)/1000)
-      console.log(`Campign sleepes for ${min} and begine shortly`)
-      return new Promise(resolve => setTimeout(resolve,ms))
+   private sleep(ms: number) {
+      // Fixed math readability to accurately log minutes
+      const min = (ms / 1000 / 60).toFixed(2);
+      console.log(`\n⏳ Campaign sleeping for ${min} minutes...`);
+      return new Promise(resolve => setTimeout(resolve, ms));
    }
 
-   private getTargetData(){
-      if(!fs.existsSync(this.filePath)){
-         console.log(`file ${FileName} is not exist in ${this.filePath}`)
-         return []
+   // 3. Explicitly defined the return type as any[] to fix Error 2571
+   private getTargetData(): any[] {
+         if (!fs.existsSync(this.filePath)) {
+            console.log(`\n File ${FileName} does not exist at ${this.filePath}`);
+            return [];
+         }
+
+         const workbook = xlsx.readFile(this.filePath);
+         const sheetName = workbook.SheetNames[0];
+
+         if (!sheetName) {
+            console.log('\n Workbook is empty. No sheets found.');
+            return [];
+         }
+
+         const worksheet = workbook.Sheets[sheetName];
+
+         if (!worksheet) {
+            console.log(`\nWorksheet '${sheetName}' is missing or corrupted.`);
+            return [];
+         }
+
+         const data = xlsx.utils.sheet_to_json<any>(worksheet);
+
+         data.sort((a: any, b: any) => (b.amountUSD || 0) - (a.amountUSD || 0));
+         return data;
       }
 
-      const workbook=xlsx.readFile(this.filePath)
-      const sheetName=workbook.SheetNames[0]
-      const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName])
-
-      data.sort((a:any,b:any)=> (b.amountUSD || 0)-(a.amountUSD || 0))
-      return data
+   private saveProgression(data: any[]) {
+      const workSheet = xlsx.utils.json_to_sheet(data);
+      const workbook = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(workbook, workSheet, "fundingRound");
+      xlsx.writeFile(workbook, this.filePath);
    }
 
-   private saveProgtrssion(data:any){
-      const workSheet=xlsx.utils.json_to_sheet(data)
-      const workbook=xlsx.utils.book_new()
-      xlsx.utils.book_append_sheet(workbook,workSheet,"fundingRound")
-      xlsx.writeFile(workbook,this.filePath)
+   public async runBatch() {
+      console.log(" Initializing OutReach Campaign...");
+      
+      const data = this.getTargetData();
+      
+      const pendingTargets = data.filter((row: any) => 
+            row.ContactStatus !== 'Sent' && 
+            row.ContactStatus !== 'Failed' && 
+            row.targetEmail
+         );
+
+      if (pendingTargets.length === 0) {
+         console.log('\n No pending targets with emails found. Campaign idle.');
+         return;
+      }
+      
+      const currentBatch = pendingTargets.slice(0, BatchSize);
+      console.log(`\n This batch locked ${currentBatch.length} targets.`);
+
+      for (let i = 0; i < currentBatch.length; i++) {
+         const target: any = currentBatch[i];
+         console.log(`\n [${i + 1}/${currentBatch.length}] Pitching ${target.startupName}...`);
+
+         // Fire the email
+         const success = await this.mailer.sendPitch(
+            target.targetEmail, 
+            target.startupName, 
+            target.founderName
+         );
+
+         // Update the master data array
+         const targetIndex = data.findIndex((row: any) => row.startupName === target.startupName);
+         if (targetIndex !== -1) {
+            data[targetIndex].ContactStatus = success ? 'Sent' : 'Failed';
+         }
+
+         // Checkpoint: Save to Excel immediately.
+         this.saveProgression(data);
+
+         // Add stochastic delay if it's not the last email in the batch
+         if (i < currentBatch.length - 1) {
+            const delay = this.getRandomDelay();
+            await this.sleep(delay);
+         }
+      }
+      console.log('\n Shift complete. Entering deep sleep mode.');
    }
 
-   public async runBatch(){
-      console.log("Initilize outReach campaigne")
+   public async startDaemon() {
+      while (true) {
+         await this.runBatch();
+         
+         console.log(`\n Hibernating for 12 hours. Do not close this terminal.`);
+         await this.sleep(SessionTiming);
+      }
    }
 }
+
+const manager = new CampaignManager();
+manager.startDaemon();
