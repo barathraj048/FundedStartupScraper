@@ -1,0 +1,1 @@
+{"version":3,"file":"campaign.d.ts","sourceRoot":"","sources":["../src/campaign.ts"],"names":[],"mappings":"AAWA,qBAAa,eAAe;IAEzB,OAAO,CAAC,MAAM,CAAwB;IACtC,OAAO,CAAC,QAAQ,CAAmD;IAEnE,OAAO,CAAC,cAAc;IAItB,OAAO,CAAC,KAAK;IAQb,OAAO,CAAC,aAAa;IA2BrB,OAAO,CAAC,eAAe;IAOV,QAAQ;IAgDR,WAAW;CAQ1B"}

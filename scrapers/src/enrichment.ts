@@ -16,10 +16,13 @@ export class EnrichmentEngine {
 
    private getTargetData(): any[] {
       if (!fs.existsSync(this.filePath)) return [];
-      const workbook = xlsx.readFile(this.filePath);
+      
+      const fileBuffer = fs.readFileSync(this.filePath);
+      const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+      
       const sheetName = workbook.SheetNames[0];
       if(!sheetName){
-         console.log(`sheetname is not defined`)
+         console.log(`Sheet name is not defined`)
          return []
       }
 
@@ -32,10 +35,13 @@ export class EnrichmentEngine {
       const workSheet = xlsx.utils.json_to_sheet(data);
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(workbook, workSheet, "fundingRound");
-      xlsx.writeFile(workbook, this.filePath);
+      
+      const outBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      // Write the buffer to disk using Node.js natively
+      fs.writeFileSync(this.filePath, outBuffer);
    }
 
-   // The Core Discovery Logic
+   // ... keep your runEnrichment() method exactly as it is!
    public async runEnrichment() {
       console.log(" Initiating Zero-Cost Data Enrichment Pipeline...");
       
@@ -47,55 +53,51 @@ export class EnrichmentEngine {
 
       // Find companies missing a targetEmail
       const targets = data.filter(row => !row.targetEmail);
-      console.log(`Found ${targets.length} startups missing email routing data.`);
+      console.log(` Found ${targets.length} startups missing email routing data.`);
+      
       for (let i = 0; i < targets.length; i++) {
-               const company = targets[i];
-               console.log(`\📡 [${i + 1}/${targets.length}] Locating domain for: ${company.startupName}`);
+         const company = targets[i];
+         console.log(`\n📡 [${i + 1}/${targets.length}] Locating domain for: ${company.startupName}`);
 
-               try {
-                  const url = `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(company.startupName)}`;
-                  const response = await this.impit.fetch(url, { method: "GET" });
+         try {
+            const url = `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(company.startupName)}`;
+            const response = await this.impit.fetch(url, { method: "GET" });
 
-                  if (response.ok) {
-                     const suggestions = await response.json() as any[];
-                     
-                     if (suggestions && suggestions.length > 0) {
-                        const primaryDomain = suggestions[0].domain;
-                        console.log(` Found domain: ${primaryDomain}`);
-
-                        const generatedEmail = `careers@${primaryDomain}`;
-                        
-                        // Update the master array
-                        const index = data.findIndex(row => row.startupName === company.startupName);
-                        if (index !== -1) {
-                           data[index].targetEmail = generatedEmail;
-                           data[index].website = primaryDomain; 
-                        }
-
-                        this.saveProgression(data);
-                     } else {
-                        console.log(` No domain matched for ${company.startupName}`);
-                     }
-                  } else if (response.status === 429) {
-                     console.log(` Rate limit hit! Forcing a 5-minute cooldown...`);
-                     await this.sleep(600000); // 10 minutes emergency cooldown
-                  }
-               } catch (error) {
-                  console.error(` Network error fetching ${company.startupName}:`, error);
-               }
-
-               // --- THE GOVERNOR LOGIC ---
+            if (response.ok) {
+               const suggestions = await response.json() as any[];
                
-               // 1. Every 50 requests, take a 20-minute break to clear the API rate limits
-               if (i > 0 && i % 50 === 0) {
-                  console.log(`\n Batch of 50 complete. Cooling down IP for 2 minutes...`);
-                  await this.sleep(1200000); 
+               if (suggestions && suggestions.length > 0) {
+                  const primaryDomain = suggestions[0].domain;
+                  console.log(` Found domain: ${primaryDomain}`);
+
+                  const generatedEmail = `careers@${primaryDomain}`;
+                  
+                  const index = data.findIndex(row => row.startupName === company.startupName);
+                  if (index !== -1) {
+                     data[index].targetEmail = generatedEmail;
+                     data[index].website = primaryDomain; 
+                  }
+
+                  this.saveProgression(data);
                } else {
-                  // 2. Micro-jitter: Random sleep between 2 and 4 seconds
-                  const jitter = Math.floor(Math.random() * 4000) + 2000;
-                  await this.sleep(jitter);
+                  console.log(` No domain matched for ${company.startupName}`);
                }
+            } else if (response.status === 429) {
+               console.log(` Rate limit hit! Forcing a 10-minute cooldown...`);
+               await this.sleep(600000); 
             }
+         } catch (error) {
+            console.error(` Network error fetching ${company.startupName}:`, error);
+         }
+
+         if (i > 0 && i % 50 === 0) {
+            console.log(`\n Batch of 50 complete. Cooling down IP for 20 minutes...`);
+            await this.sleep(1200000); 
+         } else {
+            const jitter = Math.floor(Math.random() * 4000) + 2000;
+            await this.sleep(jitter);
+         }
+      }
 
       console.log("\n Enrichment complete. Database updated.");
    }

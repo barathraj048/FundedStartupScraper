@@ -6,8 +6,8 @@ export class MailOutReacher {
         this.transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
-                user: "barathraj048@gmail.com",
-                pass: "kbtd vbat ptla pmtf"
+                user: process.env.USER,
+                pass: process.env.PASS
             }
         });
     }
