@@ -1,1 +1,1 @@
-{"version":3,"file":"campaign.d.ts","sourceRoot":"","sources":["../src/campaign.ts"],"names":[],"mappings":"AAWA,qBAAa,eAAe;IAEzB,OAAO,CAAC,MAAM,CAAwB;IACtC,OAAO,CAAC,QAAQ,CAAmD;IAEnE,OAAO,CAAC,cAAc;IAItB,OAAO,CAAC,KAAK;IAQb,OAAO,CAAC,aAAa;IA2BrB,OAAO,CAAC,eAAe;IAOV,QAAQ;IAgDR,WAAW;CAQ1B"}
+{"version":3,"file":"campaign.d.ts","sourceRoot":"","sources":["../src/campaign.ts"],"names":[],"mappings":"AAYA,qBAAa,eAAe;IACzB,OAAO,CAAC,MAAM,CAAwB;IACtC,OAAO,CAAC,QAAQ,CAAmD;IAEnE,OAAO,CAAC,cAAc;IAItB,OAAO,CAAC,KAAK;IAOb,OAAO,CAAC,aAAa;IA+BrB,OAAO,CAAC,eAAe;IAWV,QAAQ;IA8CR,WAAW;CAQ1B"}

@@ -1,6 +1,7 @@
 import * as nodemailer from "nodemailer";
 import * as path from "path";
 import type { ReachoutAdapter } from "../types/types.js";
+import "dotenv/config";
 
 export class MailOutReacher implements ReachoutAdapter {
    private transporter: nodemailer.Transporter;
@@ -9,36 +10,28 @@ export class MailOutReacher implements ReachoutAdapter {
       this.transporter = nodemailer.createTransport({
          service: "gmail",
          auth: {
-            user: process.env.USER,
-            pass: process.env.PASS
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
          }
       });
    }
 
    async sendPitch(targetMail: string, targetCompany: string, founder?: string) {
-      const subjectLine = `Scaling ${targetCompany} backend: HFT, OSS & Top 10% LeetCode`;
+      const subjectLine = `OSS contributor (n8n, Cal.com) · Top 9% LeetCode`;
 
-      // Upgraded plain-text formatting with hyphens for readability
-      const textBody = `Hi ${founder || 'Team'},
+      const textBody = `Hi ${founder || 'there'},
 
-         I know you're heads-down building ${targetCompany}, so I'll keep this brief. I'm a software engineer specialized in shipping production-ready code and optimizing complex architectures.
+      Saw ${targetCompany}'s raise - congrats. Keeping this short.
 
-         A quick snapshot of my recent execution:
-         - Ranked Top 10% globally on LeetCode (1754 rating), proving rigorous algorithmic efficiency.
-         - Engineered a sub-100ms latency high-frequency trading system and developed a healthcare SaaS in 48 hours.
-         - Active core infrastructure contributor to open-source projects like n8n and Cal.com.
+      Three things instead of a cover letter:
+      - Built and load-tested a trading engine at 1,000 req/s / 500 concurrent users, 21.9ms p95, 0% errors.
+      - Merged code into n8n and Cal.com - tools that might already be in your stack.
+      - Top 9% globally on LeetCode, 1,760+ peak rating, 325+ problems solved.
 
-         I am looking for a fast-paced engineering team where I can step in and make an immediate impact post-raise. I have attached my resume for a deeper dive into my stack.
+      If backend engineering is a priority right now, worth a quick call? If not, just say so and I'll drop it.
 
-         Are you open to a quick chat this week to see if there's a mutual fit?
-
-         Best,
-
-         Barath M
-         Mail: barathraj048@gmail.com 
-         GitHub: https://github.com/barathraj048/
-         LeetCode: https://leetcode.com/u/barathraj048/
-         Contact No: (+91) 9629244707`;
+      Barath M
+      github.com/barathraj048 · leetcode.com/u/barathraj048 · (+91) ${process.env.PHONE}`;
       try {
          await this.transporter.sendMail({
             from: "barathraj048@gmail.com", 
@@ -56,11 +49,12 @@ export class MailOutReacher implements ReachoutAdapter {
          console.log(`Pitch delivered to ${targetMail} with attachment`);
          return true;
       } catch (e) {
+         console.log(process.env.EMAIL_PASS,process.env.EMAIL_USER)
          console.error(`Error while sending to ${targetMail}: ${e}`);
          return false;
       }
    }
 }
 
-const test=new MailOutReacher
-test.sendPitch("ammabharath05@gmail.com","kittyGrow","barath")
+let test =new MailOutReacher()
+test.sendPitch("ammabharath05@gmail.com","batman_Kitty_cave","ambu")

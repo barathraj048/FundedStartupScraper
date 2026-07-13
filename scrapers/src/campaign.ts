@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { MailOutReacher } from './mailDispatcher/mailer.js';
 
+
 const FileName: string = "Startup_Funding_Data03.xlsx"; 
 const BatchSize: number = 35;
 const MinDelaIn_Ms = 2 * 60 * 1000;
@@ -10,7 +11,6 @@ const MaxDelayIn_MS = 20 * 60 * 1000;
 const SessionTiming = 12 * 60 * 60 * 1000;
 
 export class CampaignManager {
-   // 2. Fixed typo from 'maoler' to 'mailer'
    private mailer = new MailOutReacher(); 
    private filePath = path.resolve(process.cwd(), "output", FileName);
 
@@ -19,45 +19,52 @@ export class CampaignManager {
    }
 
    private sleep(ms: number) {
-      // Fixed math readability to accurately log minutes
       const min = (ms / 1000 / 60).toFixed(2);
       console.log(`\n⏳ Campaign sleeping for ${min} minutes...`);
       return new Promise(resolve => setTimeout(resolve, ms));
    }
 
-   // 3. Explicitly defined the return type as any[] to fix Error 2571
+   // 1. Read Bypass using Native Memory Buffers
    private getTargetData(): any[] {
-         if (!fs.existsSync(this.filePath)) {
-            console.log(`\n File ${FileName} does not exist at ${this.filePath}`);
-            return [];
-         }
-
-         const workbook = xlsx.readFile(this.filePath);
-         const sheetName = workbook.SheetNames[0];
-
-         if (!sheetName) {
-            console.log('\n Workbook is empty. No sheets found.');
-            return [];
-         }
-
-         const worksheet = workbook.Sheets[sheetName];
-
-         if (!worksheet) {
-            console.log(`\nWorksheet '${sheetName}' is missing or corrupted.`);
-            return [];
-         }
-
-         const data = xlsx.utils.sheet_to_json<any>(worksheet);
-
-         data.sort((a: any, b: any) => (b.amountUSD || 0) - (a.amountUSD || 0));
-         return data;
+      if (!fs.existsSync(this.filePath)) {
+         console.log(`\n File ${FileName} does not exist at ${this.filePath}`);
+         return [];
       }
 
+      // Read file natively via Node.js into a memory buffer
+      const fileBuffer = fs.readFileSync(this.filePath);
+      // Parse the raw buffer directly
+      const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+
+      if (!sheetName) {
+         console.log('\n Workbook is empty. No sheets found.');
+         return [];
+      }
+
+      const worksheet = workbook.Sheets[sheetName];
+
+      if (!worksheet) {
+         console.log(`\nWorksheet '${sheetName}' is missing or corrupted.`);
+         return [];
+      }
+
+      const data = xlsx.utils.sheet_to_json<any>(worksheet);
+
+      data.sort((a: any, b: any) => (b.amountUSD || 0) - (a.amountUSD || 0));
+      return data;
+   }
+
+   // 2. Write Bypass using Native Memory Buffers
    private saveProgression(data: any[]) {
       const workSheet = xlsx.utils.json_to_sheet(data);
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(workbook, workSheet, "fundingRound");
-      xlsx.writeFile(workbook, this.filePath);
+      
+      // Write workbook structure into a raw binary buffer
+      const outBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      // Native write to disk
+      fs.writeFileSync(this.filePath, outBuffer);
    }
 
    public async runBatch() {
@@ -90,16 +97,14 @@ export class CampaignManager {
             target.founderName
          );
 
-         // Update the master data array
          const targetIndex = data.findIndex((row: any) => row.startupName === target.startupName);
          if (targetIndex !== -1) {
             data[targetIndex].ContactStatus = success ? 'Sent' : 'Failed';
          }
 
-         // Checkpoint: Save to Excel immediately.
+         // Immediate state checkpoint
          this.saveProgression(data);
 
-         // Add stochastic delay if it's not the last email in the batch
          if (i < currentBatch.length - 1) {
             const delay = this.getRandomDelay();
             await this.sleep(delay);
