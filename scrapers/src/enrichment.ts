@@ -37,11 +37,9 @@ export class EnrichmentEngine {
       xlsx.utils.book_append_sheet(workbook, workSheet, "fundingRound");
       
       const outBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-      // Write the buffer to disk using Node.js natively
       fs.writeFileSync(this.filePath, outBuffer);
    }
 
-   // ... keep your runEnrichment() method exactly as it is!
    public async runEnrichment() {
       console.log(" Initiating Zero-Cost Data Enrichment Pipeline...");
       
@@ -51,7 +49,6 @@ export class EnrichmentEngine {
          return;
       }
 
-      // Find companies missing a targetEmail
       const targets = data.filter(row => !row.targetEmail);
       console.log(` Found ${targets.length} startups missing email routing data.`);
       

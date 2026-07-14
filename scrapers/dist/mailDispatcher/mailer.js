@@ -50,6 +50,4 @@ export class MailOutReacher {
         }
     }
 }
-let test = new MailOutReacher();
-test.sendPitch("ammabharath05@gmail.com", "batman_Kitty_cave", "ambu");
 //# sourceMappingURL=mailer.js.map

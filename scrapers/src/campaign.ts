@@ -24,16 +24,13 @@ export class CampaignManager {
       return new Promise(resolve => setTimeout(resolve, ms));
    }
 
-   // 1. Read Bypass using Native Memory Buffers
    private getTargetData(): any[] {
       if (!fs.existsSync(this.filePath)) {
          console.log(`\n File ${FileName} does not exist at ${this.filePath}`);
          return [];
       }
 
-      // Read file natively via Node.js into a memory buffer
       const fileBuffer = fs.readFileSync(this.filePath);
-      // Parse the raw buffer directly
       const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
 
@@ -55,15 +52,12 @@ export class CampaignManager {
       return data;
    }
 
-   // 2. Write Bypass using Native Memory Buffers
    private saveProgression(data: any[]) {
       const workSheet = xlsx.utils.json_to_sheet(data);
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(workbook, workSheet, "fundingRound");
       
-      // Write workbook structure into a raw binary buffer
       const outBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-      // Native write to disk
       fs.writeFileSync(this.filePath, outBuffer);
    }
 
@@ -90,7 +84,6 @@ export class CampaignManager {
          const target: any = currentBatch[i];
          console.log(`\n [${i + 1}/${currentBatch.length}] Pitching ${target.startupName}...`);
 
-         // Fire the email
          const success = await this.mailer.sendPitch(
             target.targetEmail, 
             target.startupName, 
@@ -102,7 +95,6 @@ export class CampaignManager {
             data[targetIndex].ContactStatus = success ? 'Sent' : 'Failed';
          }
 
-         // Immediate state checkpoint
          this.saveProgression(data);
 
          if (i < currentBatch.length - 1) {

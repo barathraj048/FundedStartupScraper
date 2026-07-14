@@ -55,6 +55,3 @@ export class MailOutReacher implements ReachoutAdapter {
       }
    }
 }
-
-let test =new MailOutReacher()
-test.sendPitch("ammabharath05@gmail.com","batman_Kitty_cave","ambu")

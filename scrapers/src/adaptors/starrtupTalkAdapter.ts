@@ -14,7 +14,7 @@ export class starrtupTalkAdepter implements ScraperAdapter{
    }
 
    async fetchLatest(): Promise<UnifiedFundingRound[]> {
-   try {
+   try {   
       console.log(` Fetching HTML from ${this.Url}`);
       const response = await this.impit.fetch(this.Url, { method: "GET" });
       
