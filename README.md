@@ -93,8 +93,9 @@ npm install
 Create a `.env` file (never commit this — already covered in `.gitignore`):
 
 ```
-USER=your-gmail-address@gmail.com
-PASS=your-gmail-app-password   # use an App Password, not your real password
+EMAIL_USER=your-gmail-address@gmail.com
+EMAIL_PASS=your-gmail-app-password   # use an App Password, not your real password
+PHONE=your-Phone number 
 ```
 
 Run each stage:
@@ -114,7 +115,7 @@ npx ts-node src/campaign.ts
 
 - **970** startups sourced across 2 independent data sources
 - **793** verified contact points enriched (~82% match rate)
-- **[X]** pitches sent to date
+- **200+** pitches sent to date (till date)
 
 ## Roadmap
 
